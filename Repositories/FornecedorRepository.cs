@@ -99,6 +99,85 @@ namespace avaliacao_tecnica_visualsoft.Repositories
         }
 
 
+        public void AtualizarFornecedorComEndereco(
+            int fornecedorId,
+            string cnpj,
+            string razaoSocial,
+            string telefone,
+            string email,
+            string responsavel,
+            string logradouro,
+            string numero,
+            string bairro,
+            string cidade,
+            string estado,
+            string cep)
+        {
+            try
+            {
+                _databaseService.OpenConnection();
+                using (var transaction = _databaseService.BeginTransaction())
+                {
+                    try
+                    {
+                        AtualizarFornecedor(transaction, fornecedorId, cnpj, razaoSocial, telefone, email, responsavel);
+                        AtualizarEndereco(transaction, fornecedorId, logradouro, numero, bairro, cidade, estado, cep);
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro ao atualizar fornecedor e endereço: " + ex.Message, ex);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Erro na transação: " + ex.Message, ex);
+            }
+            finally
+            {
+                _databaseService.CloseConnection();
+            }
+        }
+
+        private void AtualizarFornecedor(MySqlTransaction transaction, int fornecedorId, string cnpj, string razaoSocial, string telefone, string email, string responsavel)
+        {
+            const string query = "UPDATE fornecedor SET cnpj = @cnpj, razao_social = @razao_social, telefone = @telefone, email = @email, responsavel = @responsavel " +
+                                 "WHERE id = @fornecedor_id";
+
+            using (var cmd = new MySqlCommand(query, _databaseService.Connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@fornecedor_id", fornecedorId);
+                cmd.Parameters.AddWithValue("@cnpj", cnpj);
+                cmd.Parameters.AddWithValue("@razao_social", razaoSocial);
+                cmd.Parameters.AddWithValue("@telefone", telefone);
+                cmd.Parameters.AddWithValue("@email", email);
+                cmd.Parameters.AddWithValue("@responsavel", responsavel);
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private void AtualizarEndereco(MySqlTransaction transaction, int fornecedorId, string logradouro, string numero, string bairro, string cidade, string estado, string cep)
+        {
+            const string query = "UPDATE endereco SET logradouro = @logradouro, numero = @numero, bairro = @bairro, cidade = @cidade, estado = @estado, cep = @cep " +
+                                 "WHERE fornecedor_id = @fornecedor_id";
+
+            using (var cmd = new MySqlCommand(query, _databaseService.Connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@fornecedor_id", fornecedorId);
+                cmd.Parameters.AddWithValue("@logradouro", logradouro);
+                cmd.Parameters.AddWithValue("@numero", numero);
+                cmd.Parameters.AddWithValue("@bairro", bairro);
+                cmd.Parameters.AddWithValue("@cidade", cidade);
+                cmd.Parameters.AddWithValue("@estado", estado);
+                cmd.Parameters.AddWithValue("@cep", cep);
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+
         public List<Fornecedor> BuscarFornecedores(string criterio)
         {
             var fornecedores = new List<Fornecedor>();
@@ -107,7 +186,8 @@ namespace avaliacao_tecnica_visualsoft.Repositories
                                  "e.logradouro, e.numero, e.bairro, e.cidade, e.estado, e.cep " +
                                  "FROM fornecedor f " +
                                  "INNER JOIN endereco e ON e.fornecedor_id = f.id " +
-                                 "WHERE f.razao_social LIKE @search OR f.responsavel LIKE @search OR f.cnpj LIKE @search;";
+                                 "WHERE f.razao_social LIKE @search OR f.responsavel LIKE @search OR f.cnpj LIKE @search " +
+                                 "ORDER BY f.id DESC;";
 
             try
             {

@@ -11,7 +11,7 @@ namespace avaliacao_tecnica_visualsoft
     public partial class Home : Form
     {
         private readonly IServiceAbstractFactory _factory = new ServiceFactory();
-        
+        private int? selectedFornecedorId = null;
         public Home()
         {
             InitializeComponent();
@@ -26,7 +26,13 @@ namespace avaliacao_tecnica_visualsoft
             lstFornecedores.Columns.Add("CNPJ", 100, HorizontalAlignment.Center);
             lstFornecedores.Columns.Add("Razão Social", 150, HorizontalAlignment.Center);
             lstFornecedores.Columns.Add("Nome do Responsavel", 150, HorizontalAlignment.Center);
-            lstFornecedores.Columns.Add("Endereço", 250, HorizontalAlignment.Center);
+            lstFornecedores.Columns.Add("Email", 150, HorizontalAlignment.Center);
+            lstFornecedores.Columns.Add("Telefone", 150, HorizontalAlignment.Center);
+            lstFornecedores.Columns.Add("Logradouro", 150, HorizontalAlignment.Center);
+            lstFornecedores.Columns.Add("Número", 50, HorizontalAlignment.Center);
+            lstFornecedores.Columns.Add("Bairro", 100, HorizontalAlignment.Center);
+            lstFornecedores.Columns.Add("Cidade", 100, HorizontalAlignment.Center);
+            lstFornecedores.Columns.Add("Estado", 50, HorizontalAlignment.Center);
             lstFornecedores.Columns.Add("CEP", 100, HorizontalAlignment.Center);
 
             CarregarContatos();
@@ -69,33 +75,42 @@ namespace avaliacao_tecnica_visualsoft
             {
                 IDatabaseService databaseService = _factory.CreateDatabaseService();
                 var repository = new Repositories.FornecedorRepository(databaseService);
-                int fornecedorId = repository.InserirFornecedorComEndereco(
-                    txtCnpj.Text,
-                    txtRazao.Text,
-                    txtTelefone.Text,
-                    txtEmail.Text,
-                    txtResponsavel.Text,
-                    txtLogradouro.Text,
-                    txtNumero.Text,
-                    txtBairro.Text,
-                    txtCidade.Text,
-                    txtEstado.Text,
-                    txtCep.Text);
+                
+                if(selectedFornecedorId == null)
+                {
+                    int fornecedorId = repository.InserirFornecedorComEndereco(
+                        txtCnpj.Text,
+                        txtRazao.Text,
+                        txtTelefone.Text,
+                        txtEmail.Text,
+                        txtResponsavel.Text,
+                        txtLogradouro.Text,
+                        txtNumero.Text,
+                        txtBairro.Text,
+                        txtCidade.Text,
+                        txtEstado.Text,
+                        txtCep.Text);
+                    MessageBoxHelper.ShowSuccess("Fornecedor Inserido Com Sucesso!");
+                }
+                else
+                {
+                    repository.AtualizarFornecedorComEndereco(
+                        selectedFornecedorId.Value,
+                        txtCnpj.Text,
+                        txtRazao.Text,
+                        txtTelefone.Text,
+                        txtEmail.Text,
+                        txtResponsavel.Text,
+                        txtLogradouro.Text,
+                        txtNumero.Text,
+                        txtBairro.Text,
+                        txtCidade.Text,
+                        txtEstado.Text,
+                        txtCep.Text);
+                    MessageBoxHelper.ShowSuccess("Fornecedor Atualizado Com Sucesso!");
+                }
 
-                MessageBoxHelper.ShowSuccess("Fornecedor Inserido Com Sucesso! ID: " + fornecedorId);
-
-                txtCnpj.Text = "";
-                txtRazao.Text = "";
-                txtTelefone.Text = "";
-                txtEmail.Text = "";
-                txtResponsavel.Text = "";
-                txtLogradouro.Text = "";
-                txtNumero.Text = "";
-                txtBairro.Text = "";
-                txtCidade.Text = "";
-                txtEstado.Text = "";
-                txtCep.Text = "";
-
+                CleanFields();
                 CarregarContatos();
             }
             catch (Exception ex)
@@ -106,37 +121,34 @@ namespace avaliacao_tecnica_visualsoft
 
         private void BtnBuscar_Click(object sender, EventArgs e)
         {
-            IDatabaseService databaseService = _factory.CreateDatabaseService();
             try
             {
-                string search = "%" + txtBuscar.Text + "%";
-                string query = "SELECT f.id, f.cnpj AS 'CNPJ', f.razao_social AS 'Razão Social', f.responsavel AS 'Nome do Responsavel', " +
-                               "CONCAT(e.logradouro, ' Nº', e.numero, ' - ', e.cidade, ', ', e.estado) AS 'Endereço', e.cep AS 'CEP' " +
-                               "FROM fornecedor f " +
-                               "INNER JOIN endereco e ON e.fornecedor_id = f.id " +
-                               "WHERE f.razao_social LIKE @search OR f.responsavel LIKE @search OR f.cnpj LIKE @search;";
-
-                databaseService.OpenConnection();
-                MySqlCommand cmd = new MySqlCommand(query, databaseService.Connection);
-                cmd.Parameters.AddWithValue("@search", search);
-
-                MySqlDataReader reader = cmd.ExecuteReader();
+                IDatabaseService databaseService = _factory.CreateDatabaseService();
+                var repository = new Repositories.FornecedorRepository(databaseService);
+                var fornecedores = repository.BuscarFornecedores(txtBuscar.Text);
 
                 lstFornecedores.Items.Clear();
 
-                if (reader.HasRows)
+                if (fornecedores.Count > 0)
                 {
-                    while (reader.Read())
+                    foreach (var fornecedor in fornecedores)
                     {
                         string[] row =
                         {
-                            reader["id"].ToString(),
-                            reader["CNPJ"].ToString(),
-                            reader["Razão Social"].ToString(),
-                            reader["Nome do Responsavel"].ToString(),
-                            reader["Endereço"].ToString(),
-                            reader["CEP"].ToString()
+                            fornecedor.Id.ToString(),
+                            fornecedor.Cnpj,
+                            fornecedor.RazaoSocial,
+                            fornecedor.Responsavel,
+                            fornecedor.Email,
+                            fornecedor.Telefone,
+                            fornecedor.Logradouro,
+                            fornecedor.Numero,
+                            fornecedor.Bairro,
+                            fornecedor.Cidade,
+                            fornecedor.Estado,
+                            fornecedor.Cep
                         };
+
                         var linha = new ListViewItem(row);
                         lstFornecedores.Items.Add(linha);
                     }
@@ -150,54 +162,95 @@ namespace avaliacao_tecnica_visualsoft
             {
                 MessageBoxHelper.ShowError(ex.Message);
             }
-            finally
-            {
-                databaseService.CloseConnection();
-            }
         }
 
         private void CarregarContatos()
         {
-            IDatabaseService databaseService = _factory.CreateDatabaseService();
             try
             {
-                string query = "SELECT f.id, f.cnpj AS 'CNPJ', f.razao_social AS 'Razão Social', f.responsavel AS 'Nome do Responsavel', " +
-                               "CONCAT(e.logradouro, ' Nº', e.numero, ' - ', e.cidade, ', ', e.estado) AS 'Endereço', e.cep AS 'CEP' " +
-                               "FROM fornecedor f " +
-                               "INNER JOIN endereco e ON e.fornecedor_id = f.id " +
-                               "ORDER BY f.id DESC;";
-
-                databaseService.OpenConnection();
-                MySqlCommand cmd = new MySqlCommand(query, databaseService.Connection);
-
-                MySqlDataReader reader = cmd.ExecuteReader();
+                IDatabaseService databaseService = _factory.CreateDatabaseService();
+                var repository = new Repositories.FornecedorRepository(databaseService);
+                var fornecedores = repository.BuscarFornecedores("");
 
                 lstFornecedores.Items.Clear();
 
-                while (reader.Read())
+                if (fornecedores.Count > 0)
                 {
-                    string[] row =
+                    foreach (var fornecedor in fornecedores)
                     {
-                        reader["id"].ToString(),
-                        reader["CNPJ"].ToString(),
-                        reader["Razão Social"].ToString(),
-                        reader["Nome do Responsavel"].ToString(),
-                        reader["Endereço"].ToString(),
-                        reader["CEP"].ToString()
-                    };
-                    var linha = new ListViewItem(row);
-                    lstFornecedores.Items.Add(linha);
+                        string[] row =
+                        {
+                            fornecedor.Id.ToString(),
+                            fornecedor.Cnpj,
+                            fornecedor.RazaoSocial,
+                            fornecedor.Responsavel,
+                            fornecedor.Email,
+                            fornecedor.Telefone,
+                            fornecedor.Logradouro,
+                            fornecedor.Numero,
+                            fornecedor.Bairro,
+                            fornecedor.Cidade,
+                            fornecedor.Estado,
+                            fornecedor.Cep
+                        };
+
+                        var linha = new ListViewItem(row);
+                        lstFornecedores.Items.Add(linha);
+                    }
                 }
-                
+                else
+                {
+                    MessageBoxHelper.ShowInfo("Nenhum registro encontrado.");
+                }
             }
             catch (Exception ex)
             {
                 MessageBoxHelper.ShowError(ex.Message);
             }
-            finally
+        }
+
+        private void LstFornecedores_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            ListView.SelectedListViewItemCollection selectedItems = lstFornecedores.SelectedItems;
+
+            foreach (ListViewItem item in selectedItems)
             {
-                databaseService.CloseConnection();
+                selectedFornecedorId = Convert.ToInt32(item.SubItems[0].Text);
+                txtCnpj.Text = item.SubItems[1].Text;
+                txtRazao.Text = item.SubItems[2].Text;
+                txtResponsavel.Text = item.SubItems[3].Text;
+                txtEmail.Text = item.SubItems[4].Text;
+                txtTelefone.Text = item.SubItems[5].Text;
+                txtLogradouro.Text = item.SubItems[6].Text;
+                txtNumero.Text = item.SubItems[7].Text;
+                txtBairro.Text = item.SubItems[8].Text;
+                txtCidade.Text = item.SubItems[9].Text;
+                txtEstado.Text = item.SubItems[10].Text;
+                txtCep.Text = item.SubItems[11].Text;
             }
+        }
+
+        private void BtnNovo_Click(object sender, EventArgs e)
+        {
+            CleanFields();
+        }
+
+        private void CleanFields()
+        {
+            selectedFornecedorId = null;
+            txtCnpj.Text = "";
+            txtRazao.Text = "";
+            txtTelefone.Text = "";
+            txtEmail.Text = "";
+            txtResponsavel.Text = "";
+            txtLogradouro.Text = "";
+            txtNumero.Text = "";
+            txtBairro.Text = "";
+            txtCidade.Text = "";
+            txtEstado.Text = "";
+            txtCep.Text = "";
+
+            txtCnpj.Focus();
         }
     }
 }
