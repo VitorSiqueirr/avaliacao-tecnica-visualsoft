@@ -15,7 +15,6 @@ namespace avaliacao_tecnica_visualsoft.Repositories
             _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
         }
 
-
         public int InserirFornecedorComEndereco(
             string cnpj,
             string razaoSocial,
@@ -174,6 +173,58 @@ namespace avaliacao_tecnica_visualsoft.Repositories
                 cmd.Parameters.AddWithValue("@estado", estado);
                 cmd.Parameters.AddWithValue("@cep", cep);
 
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public void ExcluirFornecedorComEndereco(int fornecedorId)
+        {
+            try
+            {
+                _databaseService.OpenConnection();
+                using (var transaction = _databaseService.BeginTransaction())
+                {
+                    try
+                    {
+                        ExcluirEndereco(transaction, fornecedorId);
+                        ExcluirFornecedor(transaction, fornecedorId);
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro ao excluir fornecedor e endereço: " + ex.Message, ex);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Erro na transação: " + ex.Message, ex);
+            }
+            finally
+            {
+                _databaseService.CloseConnection();
+            }
+        }
+
+        private void ExcluirFornecedor(MySqlTransaction transaction, int fornecedorId)
+        {
+            const string query = "DELETE FROM fornecedor WHERE id = @fornecedor_id";
+
+            using (var cmd = new MySqlCommand(query, _databaseService.Connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@fornecedor_id", fornecedorId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private void ExcluirEndereco(MySqlTransaction transaction, int fornecedorId)
+        {
+            const string query = "DELETE FROM endereco WHERE fornecedor_id = @fornecedor_id";
+
+            using (var cmd = new MySqlCommand(query, _databaseService.Connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@fornecedor_id", fornecedorId);
                 cmd.ExecuteNonQuery();
             }
         }

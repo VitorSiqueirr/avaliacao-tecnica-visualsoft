@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.lblCnpj = new System.Windows.Forms.Label();
             this.lblRazao = new System.Windows.Forms.Label();
             this.lblTelefone = new System.Windows.Forms.Label();
@@ -54,13 +55,17 @@
             this.lblNumero = new System.Windows.Forms.Label();
             this.lblLogradouro = new System.Windows.Forms.Label();
             this.lstFornecedores = new System.Windows.Forms.ListView();
+            this.MenuFornecedores = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.MenuItemExcluir = new System.Windows.Forms.ToolStripMenuItem();
             this.lblBuscar = new System.Windows.Forms.Label();
             this.txtBuscar = new System.Windows.Forms.TextBox();
             this.bxInfos = new System.Windows.Forms.GroupBox();
             this.btnBuscar = new System.Windows.Forms.Button();
             this.btnNovo = new System.Windows.Forms.Button();
+            this.btnExcluir = new System.Windows.Forms.Button();
             this.bxBasicInfo.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.MenuFornecedores.SuspendLayout();
             this.bxInfos.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -108,7 +113,7 @@
             // 
             // btnSave
             // 
-            this.btnSave.Location = new System.Drawing.Point(211, 293);
+            this.btnSave.Location = new System.Drawing.Point(335, 293);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
             this.btnSave.TabIndex = 12;
@@ -291,14 +296,29 @@
             // 
             // lstFornecedores
             // 
+            this.lstFornecedores.ContextMenuStrip = this.MenuFornecedores;
             this.lstFornecedores.HideSelection = false;
             this.lstFornecedores.Location = new System.Drawing.Point(11, 62);
             this.lstFornecedores.MultiSelect = false;
             this.lstFornecedores.Name = "lstFornecedores";
-            this.lstFornecedores.Size = new System.Drawing.Size(885, 245);
+            this.lstFornecedores.Size = new System.Drawing.Size(459, 245);
             this.lstFornecedores.TabIndex = 20;
             this.lstFornecedores.UseCompatibleStateImageBehavior = false;
             this.lstFornecedores.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.LstFornecedores_ItemSelectionChanged);
+            // 
+            // MenuFornecedores
+            // 
+            this.MenuFornecedores.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.MenuItemExcluir});
+            this.MenuFornecedores.Name = "MenuFornecedores";
+            this.MenuFornecedores.Size = new System.Drawing.Size(110, 26);
+            // 
+            // MenuItemExcluir
+            // 
+            this.MenuItemExcluir.Name = "MenuItemExcluir";
+            this.MenuItemExcluir.Size = new System.Drawing.Size(109, 22);
+            this.MenuItemExcluir.Text = "Excluir";
+            this.MenuItemExcluir.Click += new System.EventHandler(this.MenuItemExcluir_Click);
             // 
             // lblBuscar
             // 
@@ -324,7 +344,7 @@
             this.bxInfos.Controls.Add(this.lstFornecedores);
             this.bxInfos.Location = new System.Drawing.Point(426, 3);
             this.bxInfos.Name = "bxInfos";
-            this.bxInfos.Size = new System.Drawing.Size(904, 313);
+            this.bxInfos.Size = new System.Drawing.Size(481, 313);
             this.bxInfos.TabIndex = 23;
             this.bxInfos.TabStop = false;
             // 
@@ -340,7 +360,7 @@
             // 
             // btnNovo
             // 
-            this.btnNovo.Location = new System.Drawing.Point(130, 293);
+            this.btnNovo.Location = new System.Drawing.Point(126, 293);
             this.btnNovo.Name = "btnNovo";
             this.btnNovo.Size = new System.Drawing.Size(75, 23);
             this.btnNovo.TabIndex = 24;
@@ -348,10 +368,22 @@
             this.btnNovo.UseVisualStyleBackColor = true;
             this.btnNovo.Click += new System.EventHandler(this.BtnNovo_Click);
             // 
+            // btnExcluir
+            // 
+            this.btnExcluir.Location = new System.Drawing.Point(7, 293);
+            this.btnExcluir.Name = "btnExcluir";
+            this.btnExcluir.Size = new System.Drawing.Size(75, 23);
+            this.btnExcluir.TabIndex = 26;
+            this.btnExcluir.Text = "Excluir";
+            this.btnExcluir.UseVisualStyleBackColor = true;
+            this.btnExcluir.Visible = false;
+            this.btnExcluir.Click += new System.EventHandler(this.BtnExcluir_Click);
+            // 
             // Home
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.ClientSize = new System.Drawing.Size(1334, 331);
+            this.ClientSize = new System.Drawing.Size(921, 331);
+            this.Controls.Add(this.btnExcluir);
             this.Controls.Add(this.btnNovo);
             this.Controls.Add(this.bxInfos);
             this.Controls.Add(this.groupBox1);
@@ -363,6 +395,7 @@
             this.bxBasicInfo.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.MenuFornecedores.ResumeLayout(false);
             this.bxInfos.ResumeLayout(false);
             this.bxInfos.PerformLayout();
             this.ResumeLayout(false);
@@ -402,6 +435,9 @@
         private System.Windows.Forms.GroupBox bxInfos;
         private System.Windows.Forms.Button btnBuscar;
         private System.Windows.Forms.Button btnNovo;
+        private System.Windows.Forms.ContextMenuStrip MenuFornecedores;
+        private System.Windows.Forms.ToolStripMenuItem MenuItemExcluir;
+        private System.Windows.Forms.Button btnExcluir;
     }
 }
 

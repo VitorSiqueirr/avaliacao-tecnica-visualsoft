@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Drawing;
 using System.Windows.Forms;
 using avaliacao_tecnica_visualsoft.Factories;
 using avaliacao_tecnica_visualsoft.Services;
 using avaliacao_tecnica_visualsoft.Utils;
-using MySql.Data.MySqlClient;
 
 namespace avaliacao_tecnica_visualsoft
 {
@@ -117,6 +115,10 @@ namespace avaliacao_tecnica_visualsoft
             {
                 MessageBoxHelper.ShowError("Ocorreu: " + ex.Message);
             }
+            finally
+            {
+                btnExcluir.Visible = false;
+            }
         }
 
         private void BtnBuscar_Click(object sender, EventArgs e)
@@ -228,11 +230,14 @@ namespace avaliacao_tecnica_visualsoft
                 txtEstado.Text = item.SubItems[10].Text;
                 txtCep.Text = item.SubItems[11].Text;
             }
+
+            btnExcluir.Visible = true;
         }
 
         private void BtnNovo_Click(object sender, EventArgs e)
         {
             CleanFields();
+            btnExcluir.Visible = false;
         }
 
         private void CleanFields()
@@ -251,6 +256,51 @@ namespace avaliacao_tecnica_visualsoft
             txtCep.Text = "";
 
             txtCnpj.Focus();
+        }
+
+        private void MenuItemExcluir_Click(object sender, EventArgs e)
+        {
+            ExcluirFornecedor();
+        }
+
+        private void BtnExcluir_Click(object sender, EventArgs e)
+        {
+            ExcluirFornecedor();
+        }
+
+        private void ExcluirFornecedor()
+        {
+            try
+            {
+                DialogResult conf = MessageBoxHelper.ShowConfirmation("Deseja realmente excluir o fornecedor selecionado?", "Excluir Fornecedor");
+
+                if (conf == DialogResult.No)
+                {
+                    return;
+                }
+
+                if (selectedFornecedorId.HasValue)
+                {
+                    IDatabaseService databaseService = _factory.CreateDatabaseService();
+                    var repository = new Repositories.FornecedorRepository(databaseService);
+                    var fornecedores = repository.BuscarFornecedores("");
+                    repository.ExcluirFornecedorComEndereco(selectedFornecedorId.Value);
+                    MessageBoxHelper.ShowSuccess("Fornecedor Excluído Com Sucesso!");
+                    CarregarContatos();
+                }
+                else
+                {
+                    MessageBoxHelper.ShowWarning("Nenhum fornecedor selecionado para exclusão.");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBoxHelper.ShowError(ex.Message);
+            }
+            finally
+            {
+                btnExcluir.Visible = false;
+            }
         }
     }
 }
