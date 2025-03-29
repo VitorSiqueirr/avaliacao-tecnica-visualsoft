@@ -98,23 +98,37 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\Fornecedor.cs" />
     <Compile Include="Interfaces\IServiceAbstractFactory.cs" />
     <Compile Include="Factories\ServiceFactory.cs" />
-    <Compile Include="Forms\Home.cs">
+    <Compile Include="Views\Edit.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\Home.Designer.cs">
+    <Compile Include="Views\Edit.Designer.cs">
+      <DependentUpon>Edit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Views\List.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Views\List.Designer.cs">
+      <DependentUpon>List.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Home.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Views\Home.Designer.cs">
       <DependentUpon>Home.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Connection\SingletonBD.cs" />
+    <Compile Include="Infrastructure\SingletonDB.cs" />
     <Compile Include="Repositories\FornecedorRepository.cs" />
     <Compile Include="Services\CnpjService.cs" />
     <Compile Include="Services\DatabaseService.cs" />
     <Compile Include="Interfaces\ICnpjService.cs" />
     <Compile Include="Interfaces\IDatabaseService.cs" />
-    <EmbeddedResource Include="Forms\Home.resx">
+    <Compile Include="Utils\MessageBoxHelper.cs" />
+    <EmbeddedResource Include="Views\Home.resx">
       <DependentUpon>Home.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">

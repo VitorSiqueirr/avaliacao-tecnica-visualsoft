@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using avaliacao_tecnica_visualsoft.Class;
 using avaliacao_tecnica_visualsoft.Services;
 using MySql.Data.MySqlClient;
 
@@ -6,16 +8,13 @@ namespace avaliacao_tecnica_visualsoft.Repositories
 {
     public class FornecedorRepository
     {
-        private readonly IDatabaseService _databaseService = new DatabaseService();
-
-        public FornecedorRepository()
-        {
-        }
+        private readonly IDatabaseService _databaseService;
 
         public FornecedorRepository(IDatabaseService databaseService)
         {
-            _databaseService = databaseService;
+            _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
         }
+
 
         public int InserirFornecedorComEndereco(
             string cnpj,
@@ -35,51 +34,24 @@ namespace avaliacao_tecnica_visualsoft.Repositories
             try
             {
                 _databaseService.OpenConnection();
-                using (MySqlTransaction transaction = _databaseService.BeginTransaction())
+                using (var transaction = _databaseService.BeginTransaction())
                 {
                     try
                     {
-                        // Insere na tabela fornecedor e obtém o ID
-                        string queryFornecedor = "INSERT INTO fornecedor (cnpj, razao_social, telefone, email, responsavel) " +
-                                                 "VALUES (@cnpj, @razao_social, @telefone, @email, @responsavel); " +
-                                                 "SELECT LAST_INSERT_ID();";
-
-                        MySqlCommand cmdFornecedor = new MySqlCommand(queryFornecedor, _databaseService.Connection, transaction);
-                        cmdFornecedor.Parameters.AddWithValue("@cnpj", cnpj);
-                        cmdFornecedor.Parameters.AddWithValue("@razao_social", razaoSocial);
-                        cmdFornecedor.Parameters.AddWithValue("@telefone", telefone);
-                        cmdFornecedor.Parameters.AddWithValue("@email", email);
-                        cmdFornecedor.Parameters.AddWithValue("@responsavel", responsavel);
-
-                        fornecedorId = Convert.ToInt32(cmdFornecedor.ExecuteScalar());
-
-                        // Insere na tabela endereco utilizando o ID obtido
-                        string queryEndereco = "INSERT INTO endereco (fornecedor_id, logradouro, numero, bairro, cidade, estado, cep) " +
-                                               "VALUES (@fornecedor_id, @logradouro, @numero, @bairro, @cidade, @estado, @cep)";
-
-                        MySqlCommand cmdEndereco = new MySqlCommand(queryEndereco, _databaseService.Connection, transaction);
-                        cmdEndereco.Parameters.AddWithValue("@fornecedor_id", fornecedorId);
-                        cmdEndereco.Parameters.AddWithValue("@logradouro", logradouro);
-                        cmdEndereco.Parameters.AddWithValue("@numero", numero);
-                        cmdEndereco.Parameters.AddWithValue("@bairro", bairro);
-                        cmdEndereco.Parameters.AddWithValue("@cidade", cidade);
-                        cmdEndereco.Parameters.AddWithValue("@estado", estado);
-                        cmdEndereco.Parameters.AddWithValue("@cep", cep);
-
-                        cmdEndereco.ExecuteNonQuery();
-
+                        fornecedorId = InserirFornecedor(transaction, cnpj, razaoSocial, telefone, email, responsavel);
+                        InserirEndereco(transaction, fornecedorId, logradouro, numero, bairro, cidade, estado, cep);
                         transaction.Commit();
                     }
                     catch (Exception ex)
                     {
                         transaction.Rollback();
-                        throw new Exception("Erro ao inserir fornecedor e endereço: " + ex.Message);
+                        throw new Exception("Erro ao inserir fornecedor e endereço: " + ex.Message, ex);
                     }
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception("Erro na transação: " + ex.Message);
+                throw new Exception("Erro na transação: " + ex.Message, ex);
             }
             finally
             {
@@ -87,6 +59,96 @@ namespace avaliacao_tecnica_visualsoft.Repositories
             }
 
             return fornecedorId;
+        }
+
+        private int InserirFornecedor(MySqlTransaction transaction, string cnpj, string razaoSocial, string telefone, string email, string responsavel)
+        {
+            const string query = "INSERT INTO fornecedor (cnpj, razao_social, telefone, email, responsavel) " +
+                                 "VALUES (@cnpj, @razao_social, @telefone, @email, @responsavel); " +
+                                 "SELECT LAST_INSERT_ID();";
+
+            using (var cmd = new MySqlCommand(query, _databaseService.Connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@cnpj", cnpj);
+                cmd.Parameters.AddWithValue("@razao_social", razaoSocial);
+                cmd.Parameters.AddWithValue("@telefone", telefone);
+                cmd.Parameters.AddWithValue("@email", email);
+                cmd.Parameters.AddWithValue("@responsavel", responsavel);
+
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+        }
+
+        private void InserirEndereco(MySqlTransaction transaction, int fornecedorId, string logradouro, string numero, string bairro, string cidade, string estado, string cep)
+        {
+            const string query = "INSERT INTO endereco (fornecedor_id, logradouro, numero, bairro, cidade, estado, cep) " +
+                                 "VALUES (@fornecedor_id, @logradouro, @numero, @bairro, @cidade, @estado, @cep)";
+
+            using (var cmd = new MySqlCommand(query, _databaseService.Connection, transaction))
+            {
+                cmd.Parameters.AddWithValue("@fornecedor_id", fornecedorId);
+                cmd.Parameters.AddWithValue("@logradouro", logradouro);
+                cmd.Parameters.AddWithValue("@numero", numero);
+                cmd.Parameters.AddWithValue("@bairro", bairro);
+                cmd.Parameters.AddWithValue("@cidade", cidade);
+                cmd.Parameters.AddWithValue("@estado", estado);
+                cmd.Parameters.AddWithValue("@cep", cep);
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+
+        public List<Fornecedor> BuscarFornecedores(string criterio)
+        {
+            var fornecedores = new List<Fornecedor>();
+            string search = "%" + criterio + "%";
+            const string query = "SELECT f.id, f.cnpj, f.razao_social, f.telefone, f.email, f.responsavel, " +
+                                 "e.logradouro, e.numero, e.bairro, e.cidade, e.estado, e.cep " +
+                                 "FROM fornecedor f " +
+                                 "INNER JOIN endereco e ON e.fornecedor_id = f.id " +
+                                 "WHERE f.razao_social LIKE @search OR f.responsavel LIKE @search OR f.cnpj LIKE @search;";
+
+            try
+            {
+                _databaseService.OpenConnection();
+                using (var cmd = new MySqlCommand(query, _databaseService.Connection))
+                {
+                    cmd.Parameters.AddWithValue("@search", search);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var fornecedor = new Fornecedor
+                            {
+                                Id = reader.GetInt32("id"),
+                                Cnpj = reader.GetString("cnpj"),
+                                RazaoSocial = reader.GetString("razao_social"),
+                                Telefone = reader.GetString("telefone"),
+                                Email = reader.GetString("email"),
+                                Responsavel = reader.GetString("responsavel"),
+                                Logradouro = reader.GetString("logradouro"),
+                                Numero = reader.GetString("numero"),
+                                Bairro = reader.GetString("bairro"),
+                                Cidade = reader.GetString("cidade"),
+                                Estado = reader.GetString("estado"),
+                                Cep = reader.GetString("cep")
+                            };
+                            fornecedores.Add(fornecedor);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Erro ao buscar fornecedores: " + ex.Message, ex);
+            }
+            finally
+            {
+                _databaseService.CloseConnection();
+            }
+
+            return fornecedores;
         }
     }
 }

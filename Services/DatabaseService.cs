@@ -9,7 +9,7 @@ namespace avaliacao_tecnica_visualsoft.Services
 {
     public class DatabaseService : IDatabaseService
     {
-        private readonly SingletonBD bd = SingletonBD.Instance;
+        private readonly SingletonDB bd = SingletonDB.Instance;
 
         public MySqlConnection Connection => bd.Connection;
 

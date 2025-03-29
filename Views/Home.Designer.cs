@@ -53,8 +53,14 @@
             this.lblBairro = new System.Windows.Forms.Label();
             this.lblNumero = new System.Windows.Forms.Label();
             this.lblLogradouro = new System.Windows.Forms.Label();
+            this.lstFornecedores = new System.Windows.Forms.ListView();
+            this.lblBuscar = new System.Windows.Forms.Label();
+            this.txtBuscar = new System.Windows.Forms.TextBox();
+            this.bxInfos = new System.Windows.Forms.GroupBox();
+            this.btnBuscar = new System.Windows.Forms.Button();
             this.bxBasicInfo.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.bxInfos.SuspendLayout();
             this.SuspendLayout();
             // 
             // lblCnpj
@@ -90,6 +96,7 @@
             this.txtCnpj.Name = "txtCnpj";
             this.txtCnpj.Size = new System.Drawing.Size(177, 20);
             this.txtCnpj.TabIndex = 6;
+            this.txtCnpj.Text = " ";
             // 
             // txtTelefone
             // 
@@ -100,7 +107,7 @@
             // 
             // btnSave
             // 
-            this.btnSave.Location = new System.Drawing.Point(178, 293);
+            this.btnSave.Location = new System.Drawing.Point(169, 293);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
             this.btnSave.TabIndex = 12;
@@ -281,10 +288,58 @@
             this.lblLogradouro.TabIndex = 0;
             this.lblLogradouro.Text = "Logradouro:";
             // 
+            // lstFornecedores
+            // 
+            this.lstFornecedores.HideSelection = false;
+            this.lstFornecedores.Location = new System.Drawing.Point(11, 62);
+            this.lstFornecedores.Name = "lstFornecedores";
+            this.lstFornecedores.Size = new System.Drawing.Size(885, 245);
+            this.lstFornecedores.TabIndex = 20;
+            this.lstFornecedores.UseCompatibleStateImageBehavior = false;
+            // 
+            // lblBuscar
+            // 
+            this.lblBuscar.AutoSize = true;
+            this.lblBuscar.Location = new System.Drawing.Point(8, 16);
+            this.lblBuscar.Name = "lblBuscar";
+            this.lblBuscar.Size = new System.Drawing.Size(111, 13);
+            this.lblBuscar.TabIndex = 21;
+            this.lblBuscar.Text = "Buscar Fornecedores:";
+            // 
+            // txtBuscar
+            // 
+            this.txtBuscar.Location = new System.Drawing.Point(11, 36);
+            this.txtBuscar.Name = "txtBuscar";
+            this.txtBuscar.Size = new System.Drawing.Size(353, 20);
+            this.txtBuscar.TabIndex = 22;
+            // 
+            // bxInfos
+            // 
+            this.bxInfos.Controls.Add(this.btnBuscar);
+            this.bxInfos.Controls.Add(this.txtBuscar);
+            this.bxInfos.Controls.Add(this.lblBuscar);
+            this.bxInfos.Controls.Add(this.lstFornecedores);
+            this.bxInfos.Location = new System.Drawing.Point(426, 3);
+            this.bxInfos.Name = "bxInfos";
+            this.bxInfos.Size = new System.Drawing.Size(904, 313);
+            this.bxInfos.TabIndex = 23;
+            this.bxInfos.TabStop = false;
+            // 
+            // btnBuscar
+            // 
+            this.btnBuscar.Location = new System.Drawing.Point(370, 36);
+            this.btnBuscar.Name = "btnBuscar";
+            this.btnBuscar.Size = new System.Drawing.Size(100, 20);
+            this.btnBuscar.TabIndex = 23;
+            this.btnBuscar.Text = "Buscar";
+            this.btnBuscar.UseVisualStyleBackColor = true;
+            this.btnBuscar.Click += new System.EventHandler(this.BtnBuscar_Click);
+            // 
             // Home
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.ClientSize = new System.Drawing.Size(419, 339);
+            this.ClientSize = new System.Drawing.Size(1334, 331);
+            this.Controls.Add(this.bxInfos);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.bxBasicInfo);
             this.Controls.Add(this.btnSave);
@@ -294,6 +349,8 @@
             this.bxBasicInfo.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.bxInfos.ResumeLayout(false);
+            this.bxInfos.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -325,6 +382,11 @@
         private System.Windows.Forms.Label lblLogradouro;
         private System.Windows.Forms.TextBox txtCep;
         private System.Windows.Forms.Label lblCep;
+        private System.Windows.Forms.ListView lstFornecedores;
+        private System.Windows.Forms.Label lblBuscar;
+        private System.Windows.Forms.TextBox txtBuscar;
+        private System.Windows.Forms.GroupBox bxInfos;
+        private System.Windows.Forms.Button btnBuscar;
     }
 }
 

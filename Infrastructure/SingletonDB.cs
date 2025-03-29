@@ -3,16 +3,16 @@ using MySql.Data.MySqlClient;
 
 namespace avaliacao_tecnica_visualsoft
 {
-    public sealed class SingletonBD
+    public sealed class SingletonDB
     {
         private static readonly String strConnection = "server=localhost;port=3306;database=avaliacao-tecnica;uid=root;pwd=visualsoft;";
         private readonly MySqlConnection connection = new MySqlConnection(strConnection);
 
-        private SingletonBD() { }
+        private SingletonDB() { }
 
-        private static readonly Lazy<SingletonBD> instance = new Lazy<SingletonBD>(() => new SingletonBD());
+        private static readonly Lazy<SingletonDB> instance = new Lazy<SingletonDB>(() => new SingletonDB());
 
-        public static SingletonBD Instance
+        public static SingletonDB Instance
         {
             get
             {
