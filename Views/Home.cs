@@ -1,24 +1,27 @@
 ﻿using System;
+using System.Net.Http;
 using System.Windows.Forms;
 using avaliacao_tecnica_visualsoft.Factories;
 using avaliacao_tecnica_visualsoft.Services;
 using avaliacao_tecnica_visualsoft.Utils;
+using Newtonsoft.Json.Linq;
+using Serilog;
 
 namespace avaliacao_tecnica_visualsoft
 {
     public partial class Home : Form
     {
         private readonly IServiceAbstractFactory _factory = new ServiceFactory();
+        private readonly IDatabaseService _databaseService;
+        private readonly Repositories.FornecedorRepository _repository;
         private int? selectedFornecedorId = null;
+
         public Home()
         {
             InitializeComponent();
 
-            lstFornecedores.View = View.Details;
-            lstFornecedores.LabelEdit = true;
-            lstFornecedores.AllowColumnReorder = true;
-            lstFornecedores.FullRowSelect = true;
-            lstFornecedores.GridLines = true;
+            _databaseService = _factory.CreateDatabaseService();
+            _repository = new Repositories.FornecedorRepository(_databaseService);
 
             lstFornecedores.Columns.Add("ID", 40, HorizontalAlignment.Center);
             lstFornecedores.Columns.Add("CNPJ", 100, HorizontalAlignment.Center);
@@ -33,87 +36,92 @@ namespace avaliacao_tecnica_visualsoft
             lstFornecedores.Columns.Add("Estado", 50, HorizontalAlignment.Center);
             lstFornecedores.Columns.Add("CEP", 100, HorizontalAlignment.Center);
 
-            FornecedorHelper.CarregarContatos(lstFornecedores, _factory);
+            CarregarContatos();
         }
 
-        private void BtnConsulta_Leave(object sender, EventArgs e)
+        private async void BtnConsulta_Click(object sender, EventArgs e)
         {
-            ICnpjService cnpjService = _factory.CreateCnpjService();
+            Log.Information("Iniciando consulta de CNPJ: {Cnpj}", txtCnpj.Text);
+            try
+            {
+                // Mostrar indicador de carregamento e desativar campos
+                FornecedorHelper.ToggleControls(this, false);
 
-            string dadosCnpj = cnpjService.ConsultarCnpj(txtCnpj.Text);
-            MessageBoxHelper.ShowInfo(dadosCnpj);
+                ICnpjService cnpjService = _factory.CreateCnpjService();
+                JObject dadosCnpj = await cnpjService.ConsultarCnpj(txtCnpj.Text);
+
+                if (dadosCnpj["status"]?.ToString() == "ERROR")
+                {
+                    throw new HttpRequestException(dadosCnpj["message"]?.ToString());
+                }
+
+                // Atualizar os campos do formulário com os dados retornados
+                txtRazao.Text = dadosCnpj["nome"]?.ToString();
+                txtResponsavel.Text = dadosCnpj["qsa"]?[0]?["nome"]?.ToString();
+                txtEmail.Text = dadosCnpj["email"]?.ToString();
+                txtTelefone.Text = dadosCnpj["telefone"]?.ToString();
+                txtLogradouro.Text = dadosCnpj["logradouro"]?.ToString();
+                txtNumero.Text = dadosCnpj["numero"]?.ToString();
+                txtBairro.Text = dadosCnpj["bairro"]?.ToString();
+                txtCidade.Text = dadosCnpj["municipio"]?.ToString();
+                txtEstado.Text = dadosCnpj["uf"]?.ToString();
+                txtCep.Text = dadosCnpj["cep"]?.ToString();
+                Log.Information("Consulta de CNPJ concluída com sucesso: {Cnpj}", txtCnpj.Text);
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("CNPJ inválido"))
+            {
+                Log.Warning("CNPJ inválido: {Cnpj}", txtCnpj.Text);
+                MessageBoxHelper.ShowInfo("CNPJ inválido, por favor digite um CNPJ válido.", "Aviso");
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("429"))
+            {
+                Log.Warning("Muitas consultas em pouco tempo: {Cnpj}", txtCnpj.Text);
+                MessageBoxHelper.ShowInfo("Foi realizada muitas consultas em poucos segundo, " + 
+                                          "por favor espere um pouco para poder fazer outra requisição!", "Aviso");
+            }
+            catch (HttpRequestException ex)
+            {
+                Log.Error(ex, "Erro ao consultar CNPJ: {Cnpj}", txtCnpj.Text);
+                MessageBoxHelper.ShowError("Erro ao consultar CNPJ: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Erro inesperado ao consultar CNPJ: {Cnpj}", txtCnpj.Text);
+                MessageBoxHelper.ShowError("Erro inesperado: " + ex.Message);
+            }
+            finally
+            {
+                FornecedorHelper.ToggleControls(this, true);
+            }
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(txtCnpj.Text) || string.IsNullOrEmpty(txtRazao.Text) ||
-                string.IsNullOrEmpty(txtTelefone.Text) || string.IsNullOrEmpty(txtEmail.Text) ||
-                string.IsNullOrEmpty(txtResponsavel.Text) || string.IsNullOrEmpty(txtLogradouro.Text) ||
-                string.IsNullOrEmpty(txtNumero.Text) || string.IsNullOrEmpty(txtBairro.Text) ||
-                string.IsNullOrEmpty(txtCidade.Text) || string.IsNullOrEmpty(txtEstado.Text) ||
-                string.IsNullOrEmpty(txtCep.Text))
+            if (!FornecedorHelper.ValidarCampos(txtCnpj.Text, txtRazao.Text, txtTelefone.Text, txtEmail.Text, txtResponsavel.Text,
+                                               txtLogradouro.Text, txtNumero.Text, txtBairro.Text, txtCidade.Text, txtEstado.Text, txtCep.Text,
+                                               out string errorMessage))
             {
-                MessageBoxHelper.ShowWarning("Preencha todos os campos!");
-                return;
-            }
-
-            if (txtCnpj.Text.Length != 14)
-            {
-                MessageBoxHelper.ShowWarning("CNPJ inválido!");
-                return;
-            }
-
-            if (txtTelefone.Text.Length != 11)
-            {
-                MessageBoxHelper.ShowWarning("Telefone inválido!");
+                MessageBoxHelper.ShowInfo(errorMessage);
                 return;
             }
 
             try
             {
-                IDatabaseService databaseService = _factory.CreateDatabaseService();
-                var repository = new Repositories.FornecedorRepository(databaseService);
-                
-                if(selectedFornecedorId == null)
+                if (selectedFornecedorId == null)
                 {
-                    int fornecedorId = repository.InserirFornecedorComEndereco(
-                        txtCnpj.Text,
-                        txtRazao.Text,
-                        txtTelefone.Text,
-                        txtEmail.Text,
-                        txtResponsavel.Text,
-                        txtLogradouro.Text,
-                        txtNumero.Text,
-                        txtBairro.Text,
-                        txtCidade.Text,
-                        txtEstado.Text,
-                        txtCep.Text);
-                    MessageBoxHelper.ShowSuccess("Fornecedor Inserido Com Sucesso!");
+                    InserirFornecedor();
                 }
                 else
                 {
-                    repository.AtualizarFornecedorComEndereco(
-                        selectedFornecedorId.Value,
-                        txtCnpj.Text,
-                        txtRazao.Text,
-                        txtTelefone.Text,
-                        txtEmail.Text,
-                        txtResponsavel.Text,
-                        txtLogradouro.Text,
-                        txtNumero.Text,
-                        txtBairro.Text,
-                        txtCidade.Text,
-                        txtEstado.Text,
-                        txtCep.Text);
-                    MessageBoxHelper.ShowSuccess("Fornecedor Atualizado Com Sucesso!");
+                    AtualizarFornecedor();
                 }
-
                 FornecedorHelper.CleanFields(this);
-                FornecedorHelper.CarregarContatos(lstFornecedores, _factory);
+                CarregarContatos();
             }
             catch (Exception ex)
             {
-                MessageBoxHelper.ShowError("Ocorreu: " + ex.Message);
+                Log.Error(ex, "Erro ao salvar fornecedor: {Cnpj}", txtCnpj.Text);
+                MessageBoxHelper.ShowError("Erro ao salvar fornecedor: " + ex.Message);
             }
             finally
             {
@@ -124,12 +132,12 @@ namespace avaliacao_tecnica_visualsoft
 
         private void BtnBuscar_Click(object sender, EventArgs e)
         {
+            Log.Information("Iniciando Busca de fornecedor");
             try
             {
-                IDatabaseService databaseService = _factory.CreateDatabaseService();
-                var repository = new Repositories.FornecedorRepository(databaseService);
-                var fornecedores = repository.BuscarFornecedores(txtBuscar.Text);
+                var fornecedores = _repository.BuscarFornecedores(txtBuscar.Text);
 
+                Log.Information("Termo da busca: {termo}", txtBuscar.Text);
                 lstFornecedores.Items.Clear();
 
                 if (fornecedores.Count > 0)
@@ -155,15 +163,18 @@ namespace avaliacao_tecnica_visualsoft
                         var linha = new ListViewItem(row);
                         lstFornecedores.Items.Add(linha);
                     }
+                    Log.Information("Busca realizada com sucesso!");
                 }
                 else
                 {
                     MessageBoxHelper.ShowInfo("Nenhum registro encontrado.");
+                    Log.Error("Nenhum registro encontrado");
                 }
             }
             catch (Exception ex)
             {
-                MessageBoxHelper.ShowError(ex.Message);
+                MessageBoxHelper.ShowError("Erro ao realizar busca: " + ex.Message);
+                Log.Error("Erro na busca do fornecedor: {erro}", ex.Message);
             }
         }
 
@@ -199,12 +210,139 @@ namespace avaliacao_tecnica_visualsoft
 
         private void MenuItemExcluir_Click(object sender, EventArgs e)
         {
-            FornecedorHelper.ExcluirFornecedor(selectedFornecedorId, _factory, lstFornecedores);
+            ExcluirFornecedor();
         }
 
         private void BtnExcluir_Click(object sender, EventArgs e)
         {
-            FornecedorHelper.ExcluirFornecedor(selectedFornecedorId, _factory, lstFornecedores);
+            ExcluirFornecedor();
+        }
+
+
+        /* 
+        * Funções auxiliares para a atualização e inclusão de Fornecedores pelo BtnSave_Click
+        */
+        private void InserirFornecedor()
+        {
+            IDatabaseService databaseService = _factory.CreateDatabaseService();
+            var repository = new Repositories.FornecedorRepository(databaseService);
+
+            Log.Information("Iniciando cadastro de fornecedor: {Cnpj}", txtCnpj.Text);
+            repository.InserirFornecedorComEndereco(
+                txtCnpj.Text,
+                txtRazao.Text,
+                txtTelefone.Text,
+                txtEmail.Text,
+                txtResponsavel.Text,
+                txtLogradouro.Text,
+                txtNumero.Text,
+                txtBairro.Text,
+                txtCidade.Text,
+                txtEstado.Text,
+                txtCep.Text);
+            Log.Information("Fornecedor cadastrado com sucesso: {Cnpj}", txtCnpj.Text);
+            MessageBoxHelper.ShowSuccess("Fornecedor Inserido Com Sucesso!");
+        }
+
+        private void AtualizarFornecedor()
+        {
+            IDatabaseService databaseService = _factory.CreateDatabaseService();
+            var repository = new Repositories.FornecedorRepository(databaseService);
+
+            Log.Information("Iniciando atualização de fornecedor: {Cnpj}", txtCnpj.Text);
+            repository.AtualizarFornecedorComEndereco(
+                selectedFornecedorId.Value,
+                txtCnpj.Text,
+                txtRazao.Text,
+                txtTelefone.Text,
+                txtEmail.Text,
+                txtResponsavel.Text,
+                txtLogradouro.Text,
+                txtNumero.Text,
+                txtBairro.Text,
+                txtCidade.Text,
+                txtEstado.Text,
+                txtCep.Text);
+            Log.Information("Fornecedor atualizado com sucesso: {Cnpj}", txtCnpj.Text);
+            MessageBoxHelper.ShowSuccess("Fornecedor Atualizado Com Sucesso!");
+        }
+
+        /* 
+        * Mantendo as funções auxiliares no arquivo principal por motivos de que é necessário abrir uma MessageBox,
+        * e não é recomendado fazer isso em arquivos que não são de View 
+        */
+
+        // Função auxiliar para Excluir fornecedor, realizando a chamada para o Helper e tratando exceções
+        private void ExcluirFornecedor()
+        {
+            Log.Information("Inciando Exclusão do Fornecedor: {fornecedorId}", selectedFornecedorId);
+            try
+            {
+                DialogResult conf = MessageBoxHelper.ShowConfirmation("Deseja realmente excluir o fornecedor selecionado?", "Excluir Fornecedor");
+
+                if (conf == DialogResult.No)
+                {
+                    Log.Information("Exclusão do Fornecedor Cancelado Pelo Usuário");
+                    return;
+                }
+
+                FornecedorHelper.ExcluirFornecedor(selectedFornecedorId, _factory);
+                MessageBoxHelper.ShowSuccess("Fornecedor Excluído Com Sucesso!");
+                FornecedorHelper.CleanFields(this);
+                CarregarContatos();
+                Log.Information("Fornecedor Excluído Com Sucesso!");
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Erro ao excluir fornecedor: {erro}", ex.Message);
+                MessageBoxHelper.ShowError("Erro ao excluir fornecedor: " + ex.Message);
+            }
+        }
+        // Função auxiliar para carregar contatos, realizando a chamada para o Helper e tratando exceções
+        private void CarregarContatos()
+        {
+            Log.Information("Iniciando Carregamento dos Fornecedores.");
+            try
+            {
+                var fornecedores = FornecedorHelper.CarregarContatos(_factory);
+                lstFornecedores.Items.Clear();
+
+                if (fornecedores.Count > 0)
+                {
+                    foreach (var fornecedor in fornecedores)
+                    {
+                        string[] row =
+                        {
+                            fornecedor.Id.ToString(),
+                            fornecedor.Cnpj,
+                            fornecedor.RazaoSocial,
+                            fornecedor.Responsavel,
+                            fornecedor.Email,
+                            fornecedor.Telefone,
+                            fornecedor.Logradouro,
+                            fornecedor.Numero,
+                            fornecedor.Bairro,
+                            fornecedor.Cidade,
+                            fornecedor.Estado,
+                            fornecedor.Cep
+                        };
+
+                        var linha = new ListViewItem(row);
+                        lstFornecedores.Items.Add(linha);
+                    }
+                    Log.Information("Carregamento dos Fornecedores Concluido com Sucesso!");
+                }
+                else
+                {
+                    Log.Error("Nenhum registro encontrado.");
+                    MessageBoxHelper.ShowInfo("Nenhum registro encontrado.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Erro ao carregar contatos: {erro}", ex.Message);
+                MessageBoxHelper.ShowError("Erro ao carregar contatos: " + ex.Message);
+            }
         }
     }
 }
