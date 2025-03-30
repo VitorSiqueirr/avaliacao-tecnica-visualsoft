@@ -33,10 +33,10 @@ namespace avaliacao_tecnica_visualsoft
             lstFornecedores.Columns.Add("Estado", 50, HorizontalAlignment.Center);
             lstFornecedores.Columns.Add("CEP", 100, HorizontalAlignment.Center);
 
-            CarregarContatos();
+            FornecedorHelper.CarregarContatos(lstFornecedores, _factory);
         }
 
-        private void BtnConsulta_Click(object sender, EventArgs e)
+        private void BtnConsulta_Leave(object sender, EventArgs e)
         {
             ICnpjService cnpjService = _factory.CreateCnpjService();
 
@@ -108,8 +108,8 @@ namespace avaliacao_tecnica_visualsoft
                     MessageBoxHelper.ShowSuccess("Fornecedor Atualizado Com Sucesso!");
                 }
 
-                CleanFields();
-                CarregarContatos();
+                FornecedorHelper.CleanFields(this);
+                FornecedorHelper.CarregarContatos(lstFornecedores, _factory);
             }
             catch (Exception ex)
             {
@@ -117,6 +117,7 @@ namespace avaliacao_tecnica_visualsoft
             }
             finally
             {
+                selectedFornecedorId = null;
                 btnExcluir.Visible = false;
             }
         }
@@ -128,51 +129,6 @@ namespace avaliacao_tecnica_visualsoft
                 IDatabaseService databaseService = _factory.CreateDatabaseService();
                 var repository = new Repositories.FornecedorRepository(databaseService);
                 var fornecedores = repository.BuscarFornecedores(txtBuscar.Text);
-
-                lstFornecedores.Items.Clear();
-
-                if (fornecedores.Count > 0)
-                {
-                    foreach (var fornecedor in fornecedores)
-                    {
-                        string[] row =
-                        {
-                            fornecedor.Id.ToString(),
-                            fornecedor.Cnpj,
-                            fornecedor.RazaoSocial,
-                            fornecedor.Responsavel,
-                            fornecedor.Email,
-                            fornecedor.Telefone,
-                            fornecedor.Logradouro,
-                            fornecedor.Numero,
-                            fornecedor.Bairro,
-                            fornecedor.Cidade,
-                            fornecedor.Estado,
-                            fornecedor.Cep
-                        };
-
-                        var linha = new ListViewItem(row);
-                        lstFornecedores.Items.Add(linha);
-                    }
-                }
-                else
-                {
-                    MessageBoxHelper.ShowInfo("Nenhum registro encontrado.");
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBoxHelper.ShowError(ex.Message);
-            }
-        }
-
-        private void CarregarContatos()
-        {
-            try
-            {
-                IDatabaseService databaseService = _factory.CreateDatabaseService();
-                var repository = new Repositories.FornecedorRepository(databaseService);
-                var fornecedores = repository.BuscarFornecedores("");
 
                 lstFornecedores.Items.Clear();
 
@@ -236,71 +192,19 @@ namespace avaliacao_tecnica_visualsoft
 
         private void BtnNovo_Click(object sender, EventArgs e)
         {
-            CleanFields();
-            btnExcluir.Visible = false;
-        }
-
-        private void CleanFields()
-        {
+            FornecedorHelper.CleanFields(this);
             selectedFornecedorId = null;
-            txtCnpj.Text = "";
-            txtRazao.Text = "";
-            txtTelefone.Text = "";
-            txtEmail.Text = "";
-            txtResponsavel.Text = "";
-            txtLogradouro.Text = "";
-            txtNumero.Text = "";
-            txtBairro.Text = "";
-            txtCidade.Text = "";
-            txtEstado.Text = "";
-            txtCep.Text = "";
-
-            txtCnpj.Focus();
+            btnExcluir.Visible = false;
         }
 
         private void MenuItemExcluir_Click(object sender, EventArgs e)
         {
-            ExcluirFornecedor();
+            FornecedorHelper.ExcluirFornecedor(selectedFornecedorId, _factory, lstFornecedores);
         }
 
         private void BtnExcluir_Click(object sender, EventArgs e)
         {
-            ExcluirFornecedor();
-        }
-
-        private void ExcluirFornecedor()
-        {
-            try
-            {
-                DialogResult conf = MessageBoxHelper.ShowConfirmation("Deseja realmente excluir o fornecedor selecionado?", "Excluir Fornecedor");
-
-                if (conf == DialogResult.No)
-                {
-                    return;
-                }
-
-                if (selectedFornecedorId.HasValue)
-                {
-                    IDatabaseService databaseService = _factory.CreateDatabaseService();
-                    var repository = new Repositories.FornecedorRepository(databaseService);
-                    var fornecedores = repository.BuscarFornecedores("");
-                    repository.ExcluirFornecedorComEndereco(selectedFornecedorId.Value);
-                    MessageBoxHelper.ShowSuccess("Fornecedor Excluído Com Sucesso!");
-                    CarregarContatos();
-                }
-                else
-                {
-                    MessageBoxHelper.ShowWarning("Nenhum fornecedor selecionado para exclusão.");
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBoxHelper.ShowError(ex.Message);
-            }
-            finally
-            {
-                btnExcluir.Visible = false;
-            }
+            FornecedorHelper.ExcluirFornecedor(selectedFornecedorId, _factory, lstFornecedores);
         }
     }
 }
