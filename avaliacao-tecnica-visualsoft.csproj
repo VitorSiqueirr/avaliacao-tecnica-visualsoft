@@ -101,18 +101,6 @@
     <Compile Include="Models\Fornecedor.cs" />
     <Compile Include="Interfaces\IServiceAbstractFactory.cs" />
     <Compile Include="Factories\ServiceFactory.cs" />
-    <Compile Include="Views\Edit.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Views\Edit.Designer.cs">
-      <DependentUpon>Edit.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Views\List.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Views\List.Designer.cs">
-      <DependentUpon>List.cs</DependentUpon>
-    </Compile>
     <Compile Include="Views\Home.cs">
       <SubType>Form</SubType>
     </Compile>
