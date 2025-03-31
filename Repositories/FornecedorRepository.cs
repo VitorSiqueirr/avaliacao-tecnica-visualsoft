@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using avaliacao_tecnica_visualsoft.Class;
 using avaliacao_tecnica_visualsoft.Services;
+using avaliacao_tecnica_visualsoft.Utils;
 using MySql.Data.MySqlClient;
 
 namespace avaliacao_tecnica_visualsoft.Repositories
@@ -68,9 +69,9 @@ namespace avaliacao_tecnica_visualsoft.Repositories
 
             using (var cmd = new MySqlCommand(query, _databaseService.Connection, transaction))
             {
-                cmd.Parameters.AddWithValue("@cnpj", cnpj);
+                cmd.Parameters.AddWithValue("@cnpj", FornecedorHelper.LimparCnpj(cnpj));
                 cmd.Parameters.AddWithValue("@razao_social", razaoSocial);
-                cmd.Parameters.AddWithValue("@telefone", telefone);
+                cmd.Parameters.AddWithValue("@telefone", FornecedorHelper.LimparTelefone(telefone));
                 cmd.Parameters.AddWithValue("@email", email);
                 cmd.Parameters.AddWithValue("@responsavel", responsavel);
 
@@ -148,9 +149,9 @@ namespace avaliacao_tecnica_visualsoft.Repositories
             using (var cmd = new MySqlCommand(query, _databaseService.Connection, transaction))
             {
                 cmd.Parameters.AddWithValue("@fornecedor_id", fornecedorId);
-                cmd.Parameters.AddWithValue("@cnpj", cnpj);
+                cmd.Parameters.AddWithValue("@cnpj", FornecedorHelper.LimparCnpj(cnpj));
                 cmd.Parameters.AddWithValue("@razao_social", razaoSocial);
-                cmd.Parameters.AddWithValue("@telefone", telefone);
+                cmd.Parameters.AddWithValue("@telefone", FornecedorHelper.LimparTelefone(telefone));
                 cmd.Parameters.AddWithValue("@email", email);
                 cmd.Parameters.AddWithValue("@responsavel", responsavel);
 

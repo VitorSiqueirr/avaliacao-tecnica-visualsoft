@@ -100,17 +100,20 @@
             // txtCnpj
             // 
             this.txtCnpj.Location = new System.Drawing.Point(140, 39);
+            this.txtCnpj.MaxLength = 18;
             this.txtCnpj.Name = "txtCnpj";
             this.txtCnpj.Size = new System.Drawing.Size(177, 20);
             this.txtCnpj.TabIndex = 1;
-            this.txtCnpj.Text = " ";
+            this.txtCnpj.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TxtCnpj_KeyPress);
             // 
             // txtTelefone
             // 
             this.txtTelefone.Location = new System.Drawing.Point(249, 88);
+            this.txtTelefone.MaxLength = 14;
             this.txtTelefone.Name = "txtTelefone";
             this.txtTelefone.Size = new System.Drawing.Size(175, 20);
             this.txtTelefone.TabIndex = 3;
+            this.txtTelefone.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TxtTelefone_KeyPress);
             // 
             // btnSave
             // 

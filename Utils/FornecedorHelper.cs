@@ -79,13 +79,13 @@ namespace avaliacao_tecnica_visualsoft.Utils
                 return false;
             }
 
-            if (txtCnpj.Length != 14)
+            if (LimparCnpj(txtCnpj).Length != 14)
             {
                 mensagemErro = "CNPJ inválido.";
                 return false;
             }
 
-            if (txtTelefone.Length != 11)
+            if (LimparTelefone(txtTelefone).Length > 11 || LimparTelefone(txtTelefone).Length < 10)
             {
                 mensagemErro = "Telefone inválido.";
                 return false;
@@ -108,6 +108,16 @@ namespace avaliacao_tecnica_visualsoft.Utils
                     ToggleControls(ctrl, enabled);
                 }
             }
+        }
+
+        public static string LimparCnpj(string cnpj)
+        {
+            return cnpj.Replace(".", string.Empty).Replace("-", string.Empty).Replace("/", string.Empty).Replace(" ", string.Empty);
+        }
+
+        public static string LimparTelefone(string telefone)
+        {
+            return telefone.Replace("(", string.Empty).Replace(")", string.Empty).Replace("-", string.Empty).Replace(" ", string.Empty);
         }
     }
 }

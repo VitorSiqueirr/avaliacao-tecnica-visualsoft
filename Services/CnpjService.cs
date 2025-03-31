@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using avaliacao_tecnica_visualsoft.Utils;
 using Newtonsoft.Json.Linq;
 
 namespace avaliacao_tecnica_visualsoft.Services
@@ -11,7 +12,7 @@ namespace avaliacao_tecnica_visualsoft.Services
 
         public async Task<JObject> ConsultarCnpj(string cnpj)
         {
-            string cnpjLimpo = cnpj.Replace(".", "").Replace("/", "").Replace("-", "");
+            string cnpjLimpo = FornecedorHelper.LimparCnpj(cnpj);
             string url = $"https://receitaws.com.br/v1/cnpj/{cnpjLimpo}";
 
             HttpResponseMessage response = await client.GetAsync(url);

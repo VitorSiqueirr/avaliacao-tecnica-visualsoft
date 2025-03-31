@@ -128,7 +128,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Infrastructure\SingletonDB.cs" />
+    <Compile Include="Connection\SingletonDB.cs" />
     <Compile Include="Repositories\FornecedorRepository.cs" />
     <Compile Include="Services\CnpjService.cs" />
     <Compile Include="Services\DatabaseService.cs" />
