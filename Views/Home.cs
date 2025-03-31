@@ -333,6 +333,7 @@ namespace avaliacao_tecnica_visualsoft
                 MessageBoxHelper.ShowSuccess("Fornecedor Excluído Com Sucesso!");
                 FornecedorHelper.CleanFields(this);
                 CarregarContatos();
+                selectedFornecedorId = null;
                 Log.Information("Fornecedor Excluído Com Sucesso!");
             }
             catch (Exception ex)
