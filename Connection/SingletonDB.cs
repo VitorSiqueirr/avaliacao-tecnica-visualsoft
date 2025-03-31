@@ -5,7 +5,7 @@ namespace avaliacao_tecnica_visualsoft
 {
     public sealed class SingletonDB
     {
-        private static readonly String strConnection = "server=localhost;port=3306;database=avaliacao-tecnica;uid=root;pwd=visualsoft;";
+        private static readonly string strConnection = "server=127.0.0.1;port=3306;database=avaliacao-tecnica;uid=root;pwd=visualsoft;";
         private readonly MySqlConnection connection = new MySqlConnection(strConnection);
 
         private SingletonDB() { }

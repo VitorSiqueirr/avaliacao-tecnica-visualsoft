@@ -27,25 +27,47 @@ informações sobre os CNPJ dos fornecedores. O projeto foi desenvolvido como part
 
     - Crie um banco de dados no MySQL. 
 	- Caso queira utilizar as mesmas configurações do banco de dados que utilizei aqui esta o comando docker: `docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=visualsoft -p 3306:3306 mysql:9.1.0`
-    - Atualize a string de conexão no arquivo `Infrasctucture/SingletonDB.cs` com as informações do seu banco de dados, caso utilize um diferente do que eu fiz.
-	- Execute o SQL que esta no arquivo `Database.sql` para criar a tabela de fornecedores.
+    - Atualize a string de conexão no arquivo `Connection/SingletonDB.cs` com as informações do seu banco de dados, caso utilize um diferente do que eu fiz.
+	- Execute o seguinte SQL para criar as tabelas e banco de dados.
+```sql
+    -- Cria o banco de dados (se ainda não existir) utilizando backticks para identificar o nome com hífen
+    CREATE DATABASE IF NOT EXISTS `avaliacao-tecnica`;
+    USE `avaliacao-tecnica`;
+
+    -- Cria a tabela de fornecedor
+    CREATE TABLE fornecedor (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        razao_social VARCHAR(255) NOT NULL,
+        cnpj VARCHAR(20) NOT NULL,
+        telefone VARCHAR(20),
+        email VARCHAR(100),
+        responsavel VARCHAR(255)
+    );
+
+    -- Cria a tabela de endereços vinculada aos fornecedores
+    CREATE TABLE endereco (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        fornecedor_id INT NOT NULL,
+        logradouro VARCHAR(255),
+        numero VARCHAR(20),
+        bairro VARCHAR(100),
+        cidade VARCHAR(100),
+        estado VARCHAR(2),
+        cep VARCHAR(20),
+        CONSTRAINT fk_endereco_fornecedor FOREIGN KEY (fornecedor_id)
+            REFERENCES fornecedor(id)
+            ON DELETE CASCADE
+    );
+```
 
 3. Abra o projeto no Visual Studio 2022 e restaure as dependências:
-```bash
-	dotnet restore
-	OU
-	nuget restore
-```
+    - No Gerenciador de Soluções, clique com o botão direito no projeto e selecione `Restaurar Pacotes NuGet`.
 
 4. Compile o projeto:
-```bash
-	dotnet build
-```
+    - No Gerenciador de Soluções, clique com o botão direito no projeto e selecione `Compilar`.
 
 5. Execute o projeto:
-```bash
-	dotnet run
-```
+    - No Gerenciador de Soluções, clique com o botão direito no projeto e selecione `Depurar` > `Iniciar Sem Depuração`.
 
 
 ## Justificativa dos Padrões de Projeto Utilizados
@@ -53,10 +75,10 @@ informações sobre os CNPJ dos fornecedores. O projeto foi desenvolvido como part
 ### Factory Method
 O padrão Factory Method é utilizado para encapsular a lógica de criação de objetos. No projeto, ele é usado na interface `IServiceAbstractFactory` e na classe `ServiceFactory`, que centralizam a criação das instâncias dos serviços de consulta de CNPJ e de banco de dados. Escolhi este padrão porque ele permite a criação isolada dos serviços, facilitando a manutenção e testes futuros.
 
-### Padrão Repository
+### Repository
 O padrão Repository é implementado na classe `FornecedorRepository`, que abstrai a lógica de acesso aos dados e fornece uma interface para interagir com o banco de dados. Escolhi este padrão porque ele separa a lógica de manipulação dos dados do restante da lógica de negócio, facilitando a compreensão do fluxo da aplicação e futuras alterações e testes do código.
 
-### Padrão Singleton
+### Singleton
 O padrão Singleton é utilizado na classe `SingletonDB`, que garante que apenas uma instância da conexão com o banco de dados seja criada e compartilhada entre os serviços. Escolhi este padrão porque ele garante que a conexão seja reutilizada e evita a criação de múltiplas conexões, o que pode causar problemas de performance e concorrência.
 
 ## Vídeo Explicativo
