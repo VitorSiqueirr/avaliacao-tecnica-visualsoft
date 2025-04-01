@@ -136,7 +136,6 @@ namespace avaliacao_tecnica_visualsoft
             try
             {
                 var fornecedores = _repository.BuscarFornecedores(txtBuscar.Text);
-
                 Log.Information("Termo da busca: {termo}", txtBuscar.Text);
                 lstFornecedores.Items.Clear();
 
@@ -218,50 +217,6 @@ namespace avaliacao_tecnica_visualsoft
             ExcluirFornecedor();
         }
 
-        private void TxtCnpj_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            TextBox t = sender as TextBox;
-            if (e.KeyChar == ' ')
-            {
-                e.Handled = true;
-                return;
-            }
-            if (e.KeyChar >= 48 && e.KeyChar <= 57)
-            {
-                t.SelectionStart = t.Text.Length + 1;
-
-                if (t.Text.Length == 2 || t.Text.Length == 6)
-                    t.Text += ".";
-                else if (t.Text.Length == 10)
-                    t.Text += "/";
-                else if (t.Text.Length == 15)
-                    t.Text += "-";
-                t.SelectionStart = t.Text.Length + 1;
-            }
-        }
-
-        private void TxtTelefone_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            TextBox t = sender as TextBox;
-            if (e.KeyChar == ' ')
-            {
-                e.Handled = true;
-                return;
-            }
-            if (e.KeyChar >= 48 && e.KeyChar <= 57)
-            {
-                t.SelectionStart = t.Text.Length + 1;
-
-                if (t.Text.Length == 0)
-                    t.Text += "(";
-                else if (t.Text.Length == 3)
-                    t.Text += ")";
-                else if (t.Text.Length == 9)
-                    t.Text += "-";
-                t.SelectionStart = t.Text.Length + 1;
-            }
-        }
-
         /* 
         * Funções auxiliares para a atualização e inclusão de Fornecedores pelo BtnSave_Click
         */
@@ -334,6 +289,7 @@ namespace avaliacao_tecnica_visualsoft
                 FornecedorHelper.CleanFields(this);
                 CarregarContatos();
                 selectedFornecedorId = null;
+                btnExcluir.Visible = false;
                 Log.Information("Fornecedor Excluído Com Sucesso!");
             }
             catch (Exception ex)
