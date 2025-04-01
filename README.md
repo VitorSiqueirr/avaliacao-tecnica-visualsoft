@@ -26,7 +26,7 @@ informações sobre os CNPJ dos fornecedores. O projeto foi desenvolvido como part
 2. Configure o banco de dados MySQL:
 
     - Crie um banco de dados no MySQL. 
-	- Caso queira utilizar as mesmas configurações do banco de dados que utilizei aqui esta o comando docker: `docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=visualsoft -p 3306:3306 mysql:9.1.0`
+	- Caso queira utilizar as mesmas configurações do banco de dados que utilizei, aqui está o comando Docker:  `docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=visualsoft -p 3306:3306 mysql:9.1.0`
     - Atualize a string de conexão no arquivo `Connection/SingletonDB.cs` com as informações do seu banco de dados, caso utilize um diferente do que eu fiz.
 	- Execute o seguinte SQL para criar as tabelas e banco de dados.
 ```sql
@@ -82,7 +82,9 @@ O padrão Repository é implementado na classe `FornecedorRepository`, que abstrai
 O padrão Singleton é utilizado na classe `SingletonDB`, que garante que apenas uma instância da conexão com o banco de dados seja criada e compartilhada entre os serviços. Escolhi este padrão porque ele garante que a conexão seja reutilizada e evita a criação de múltiplas conexões, o que pode causar problemas de performance e concorrência.
 
 ## Vídeo Explicativo
-[Link para o vídeo explicativo](https://link-para-o-video.com)
+[Link para o vídeo explicativo](https://drive.google.com/drive/folders/1Fe_EPdnRWB0kLJcj2tRKFgl9rY74w65w?usp=sharing)
+
+Peço desculpas se a gravação do vídeo ficou um pouco travada. Meu computador não é otimizado para gravações de tela e sempre fica um pouco travado quando gravo pelo OBS.
 
 Neste vídeo, você encontrará:
 - Uma visão geral do projeto
